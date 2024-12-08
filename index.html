@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secret Info Vault</title>
+    <style>
+        .page {
+            display: none;
+        }
+        .active-page {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Page 1: Account Creation and Login -->
+    <div id="page1" class="page active-page">
+        <h1>Account Creation / Login</h1>
+        <input type="text" id="usernameInput" placeholder="Enter username"><br><br>
+        <input type="password" id="passwordInput" placeholder="Enter password"><br><br>
+        <button id="createAccountButton" onclick="createAccount()">Create Account</button>
+        <button id="loginButton" onclick="login()">Login</button>
+        <p id="message"></p>
+    </div>
+
+    <!-- Page 2: Manage Info (Save Login, Credit Card, Address) -->
+    <div id="page2" class="page">
+        <h2>Manage Your Info</h2>
+        <button id="saveLoginButton">Save Login Info</button>
+        <button id="saveCreditCardButton">Save Credit Card Info</button>
+        <button id="saveAddressButton">Save Address Info</button>
+        <button id="viewInfoButton">View Saved Info</button>
+        <button id="adminAccessButton">Admin Access</button>
+    </div>
+
+    <!-- Page 3: Save Login Info Form -->
+    <div id="loginForm" class="page">
+        <h3>Save Login Info</h3>
+        <input type="text" id="loginUsernameInput" placeholder="Login Username"><br><br>
+        <input type="password" id="loginPasswordInput" placeholder="Login Password"><br><br>
+        <button id="saveLoginInfoButton">Save Login Info</button>
+    </div>
+
+    <!-- Page 4: Save Credit Card Info Form -->
+    <div id="creditCardForm" class="page">
+        <h3>Save Credit Card Info</h3>
+        <input type="text" id="cardNumberInput" placeholder="Card Number (xxxx-xxxx-xxxx-xxxx)"><br><br>
+        <input type="text" id="expiryDateInput" placeholder="Expiry Date (MM/YY)"><br><br>
+        <input type="text" id="cvvInput" placeholder="CVV (3 digits)"><br><br>
+        <button id="saveCardInfoButton">Save Credit Card Info</button>
+    </div>
+
+    <!-- Page 5: Save Address Info Form -->
+    <div id="addressForm" class="page">
+        <h3>Save Address Info</h3>
+        <input type="text" id="streetInput" placeholder="Street Address"><br><br>
+        <input type="text" id="cityInput" placeholder="City"><br><br>
+        <input type="text" id="zipInput" placeholder="Zip Code"><br><br>
+        <input type="text" id="countryInput" placeholder="Country"><br><br>
+        <button id="saveAddressInfoButton">Save Address Info</button>
+    </div>
+
+    <!-- Page 6: View Saved Information -->
+    <div id="viewInfoPage" class="page">
+        <h3>Your Saved Information:</h3>
+        <pre id="savedInfoDisplay"></pre>
+    </div>
+
+    <!-- Page 7: Admin Access -->
+    <div id="adminPage" class="page">
+        <h3>Admin Access</h3>
+        <pre id="allUserInfoDisplay"></pre>
+    </div>
+
+    <script>
+        // Load users from local storage on page load
+        var users = JSON.parse(localStorage.getItem("users")) || {}; // Use {} if no data exists
+        var adminPassword = "miamom"; // Admin password
+        var currentUser = ""; // Track the logged-in user
+
+        // Show a specific page
+        function showPage(pageId) {
+            var pages = document.querySelectorAll(".page");
+            pages.forEach(function(page) {
+                page.classList.remove("active-page");
+            });
+            document.getElementById(pageId).classList.add("active-page");
+        }
+
+        // Page 1: Create Account
+        document.getElementById("createAccountButton").onclick = function() {
+            var username = document.getElementById("usernameInput").value;
+            var password = document.getElementById("passwordInput").value;
+
+            if (username === "" || password === "") {
+                document.getElementById("message").textContent = "Username and password cannot be empty!";
+                return;
+            }
+
+            if (users[username]) {
+                document.getElementById("message").textContent = "Username already exists. Please choose a different one.";
+                return;
+            }
+
+            users[username] = { password: password, data: [] };
+            localStorage.setItem("users", JSON.stringify(users)); // Save to local storage
+            document.getElementById("message").textContent = "Account created successfully!";
+        };
+
+        // Page 1: Login
+        document.getElementById("loginButton").onclick = function() {
+            var username = document.getElementById("usernameInput").value;
+            var password = document.getElementById("passwordInput").value;
+
+            if (username === "" || password === "") {
+                document.getElementById("message").textContent = "Username and password cannot be empty!";
+                return;
+            }
+
+            if (!users[username]) {
+                document.getElementById("message").textContent = "Account not found. Please create an account first.";
+                return;
+            }
+
+            if (users[username].password === password) {
+                document.getElementById("message").textContent = "Login successful!";
+                currentUser = username;
+                showPage("page2"); // Go to the manage info page
+            } else {
+                document.getElementById("message").textContent = "Invalid password. Please try again.";
+            }
+        };
+
+        // Page 2: Manage Info (show special input forms)
+        document.getElementById("saveLoginButton").onclick = function() {
+            showPage("loginForm");
+        };
+
+        document.getElementById("saveCreditCardButton").onclick = function() {
+            showPage("creditCardForm");
+        };
+
+        document.getElementById("saveAddressButton").onclick = function() {
+            showPage("addressForm");
+        };
+
+        // Page 3: Save Login Info
+        document.getElementById("saveLoginInfoButton").onclick = function() {
+            var loginUsername = document.getElementById("loginUsernameInput").value;
+            var loginPassword = document.getElementById("loginPasswordInput").value;
+
+            if (loginUsername === "" || loginPassword === "") {
+                alert("Login info cannot be empty!");
+                return;
+            }
+
+            users[currentUser].data.push({ type: "Login", username: loginUsername, password: loginPassword });
+            localStorage.setItem("users", JSON.stringify(users)); // Save to local storage
+            alert("Login info saved successfully!");
+            showPage("page2");
+        };
+
+        // Page 4: Save Credit Card Info
+        document.getElementById("saveCardInfoButton").onclick = function() {
+            var cardNumber = document.getElementById("cardNumberInput").value;
+            var expiryDate = document.getElementById("expiryDateInput").value;
+            var cvv = document.getElementById("cvvInput").value;
+
+            if (cardNumber === "" || expiryDate === "" || cvv === "") {
+                alert("Credit card info cannot be empty!");
+                return;
+            }
+
+            users[currentUser].data.push({ type: "Credit Card", cardNumber: cardNumber, expiryDate: expiryDate, cvv: cvv });
+            localStorage.setItem("users", JSON.stringify(users)); // Save to local storage
+            alert("Credit card info saved successfully!");
+            showPage("page2");
+        };
+
+        // Page 5: Save Address Info
+        document.getElementById("saveAddressInfoButton").onclick = function() {
+            var street = document.getElementById("streetInput").value;
+            var city = document.getElementById("cityInput").value;
+            var zip = document.getElementById("zipInput").value;
+            var country = document.getElementById("countryInput").value;
+
+            if (street === "" || city === "" || zip === "" || country === "") {
+                alert("Address info cannot be empty!");
+                return;
+            }
+
+            users[currentUser].data.push({ type: "Address", street: street, city: city, zip: zip, country: country });
+            localStorage.setItem("users", JSON.stringify(users)); // Save to local storage
+            alert("Address info saved successfully!");
+            showPage("page2");
+        };
+
+        // Page 6: View Saved Info
+        document.getElementById("viewInfoButton").onclick = function() {
+            var savedInfo = users[currentUser].data.map(info => `${info.type}: ${JSON.stringify(info)}`).join("\n");
+            document.getElementById("savedInfoDisplay").textContent = savedInfo;
+            showPage("viewInfoPage");
+        };
+
+        // Page 7: Admin Access
+        document.getElementById("adminAccessButton").onclick = function() {
+            var password = prompt("Enter admin password");
+
+            if (password === adminPassword) {
+                var allData = "";
+                for (var user in users) {
+                    allData += "User: " + user + "\n";
+                    allData += "Saved information: \n"; 
+                    users[user].data.forEach(info => {
+                        allData += `${info.type}: ${JSON.stringify(info)}\n`;
+                    });
+                }
+                document.getElementById("allUserInfoDisplay").textContent = allData;
+                showPage("adminPage");
+            }
+        };
+    </script>
+</body>
+</html>
